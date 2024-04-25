@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
 import json
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -33,9 +34,7 @@ def S(t, t_s):
 def LIF_neuron_model(v_m, t, I_syn):
     return ((-(v_m-v_r)/tao_m) + (I_syn/c_m)) * S(t, t_s)
 
-while t < duration:
-    t = t + dt #Increase step size
-    I_syn = 1 * ((v_rev - v_m)*((t-t0())/tao_syn)*(np.exp(-(t-t0())/tao_syn)))
+
 
 
 

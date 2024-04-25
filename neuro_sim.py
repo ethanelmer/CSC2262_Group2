@@ -2,6 +2,24 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
+import json
+
+with open('config.json', 'r') as f:
+    config = json.load(f)
+v_r = config['v_r']
+v_thr = config['v_thr']
+v_spike = config['v_spike']
+v_rev = config['v_rev']
+tao_m = config['tao_m']
+tao_syn = config['tao_syn']
+c_m = config['c_m']
+g_bar = config['g_bar']
+t_r = config['t_r']
+w = config['w']
+dt = config['dt']
+# initialize other variables
+t = 0
+
 if __name__ == "__main__":
 
     # Add arguments
@@ -31,3 +49,12 @@ if __name__ == "__main__":
     if args.m == 'current' and not args.current:
         parser.error('--current is required when mode is "current"')
 
+    duration = 100
+
+    #GET VM USING EULER'S METHOD
+    while t < duration:
+        t = t + dt  # Increase step size
+        v_m=0
+        t0=0
+        I_syn = 1 * ((v_rev - v_m) * ((t - t0()) / tao_syn) * (np.exp(-(t - t0()) / tao_syn)))
+        v_m = (v_m+dt) * LIF_neuron_model(v_m, t, I_syn)
