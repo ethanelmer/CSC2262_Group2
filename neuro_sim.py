@@ -17,13 +17,14 @@ t_r = config['t_r'] #Refractory period
 w = config['w'] #Weight
 dt = config['dt'] #Step
 
+def s(t, t_s):
+    return 0 if t - t_s - t_r <= 0 else 1 #Equation 2 piecewise
 
 def equation1(vm,ts, t):
     reversal_potential = 0
     max_conductance = 1e-9
-    return max_conductance * (reversal_potential - vm) * np.exp(
-        -(t - ts) / tao_m
-    )
+    return (g_bar * (v_rev - vm) * ((t - ts) / tao_syn) ** np.exp(
+        -(t - ts) / tao_syn) * s(t, ts))
 
 def equation2(mode, t, spike_rate=None, current=None):
     steps = int(t/dt)
