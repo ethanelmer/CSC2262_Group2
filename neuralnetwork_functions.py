@@ -34,9 +34,6 @@ def S(t, t_s):
 def LIF_neuron_model(v_m, t, I_syn):
     return ((-(v_m-v_r)/tao_m) + (I_syn/c_m)) * S(t, t_s)
 
-
-
-
-
-
-
+def isyn(v_r,v_m,t,t0,tsyn):
+    isyn = ((v_r-v_m)*((t-t0)/tsyn))**(-(t-t0)/tsyn)
+    return isyn
