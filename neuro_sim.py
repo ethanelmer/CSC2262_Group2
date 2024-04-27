@@ -38,7 +38,7 @@ def equation2(mode, t, spike_rate=None, current=None):
                 input_current = current
             elif mode == "spike":
                 input_current = equation1(
-                    vm[i - 1], time[0], time[i], weight=1
+                    vm[i - 1], time[0], time[i]
                 )
                 input_current *= spike_rate / 1000  # Convert Hz to kHz
             else:
@@ -49,7 +49,7 @@ def equation2(mode, t, spike_rate=None, current=None):
                 + (input_current / c_m) * dt
                 - (vm[i - 1] - v_r)
                 * dt
-                / t_r)
+                / tao_m)
         plt.plot(time, vm)
         plt.xlabel("Time (s)")
         plt.ylabel("Membrane Voltage (V)")
@@ -78,7 +78,7 @@ def main():
     elif args.m == 'current' and not args.current:
         parser.error('--current is required when mode is "current"')
 
-
+    equation2(args.m, args.s, args.spike_rate)
 
     '''
         duration = 100
