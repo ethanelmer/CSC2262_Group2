@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+from neuralnetwork_functions import LIF_neuron_model
 
 import json
 
