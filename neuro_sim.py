@@ -5,17 +5,17 @@ import matplotlib.pyplot as plt
 import json
 with open('config.json', 'r') as f:
     config = json.load(f)
-v_r = config['v_r']
-v_thr = config['v_thr']
-v_spike = config['v_spike']
-v_rev = config['v_rev']
-tao_m = config['tao_m']
-tao_syn = config['tao_syn']
-c_m = config['c_m']
-g_bar = config['g_bar']
-t_r = config['t_r']
-w = config['w']
-dt = config['dt']
+v_r = config['v_r'] #Resting potential
+v_thr = config['v_thr'] #Threshold
+v_spike = config['v_spike'] #Voltage of the spike, has no significant use
+v_rev = config['v_rev'] #Reversal potential
+tao_m = config['tao_m'] #Decay time constant of the neuron
+tao_syn = config['tao_syn'] #Decay time constant of the alpha synapse
+c_m = config['c_m'] #Membrane capacitance
+g_bar = config['g_bar'] #Maximum conductance (inverse of the resistance)
+t_r = config['t_r'] #Refractory period
+w = config['w'] #Weight
+dt = config['dt'] #Step
 
 
 def equation1(vm,ts, t):
