@@ -2,22 +2,11 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from neuralnetwork_functions import LIF_neuron_model
-
 import json
 
 with open('config.json', 'r') as f:
     config = json.load(f)
-v_r = config['v_r']
-v_thr = config['v_thr']
-v_spike = config['v_spike']
-v_rev = config['v_rev']
-tao_m = config['tao_m']
-tao_syn = config['tao_syn']
-c_m = config['c_m']
-g_bar = config['g_bar']
-t_r = config['t_r']
-w = config['w']
-dt = config['dt']
+
 # initialize other variables
 t = 0
 
