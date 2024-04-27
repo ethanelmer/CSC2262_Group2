@@ -57,5 +57,5 @@ if __name__ == "__main__":
         t = t + dt  # Increase step size
         v_m=0
         t0=0
-        I_syn = 1 * ((v_rev - v_m) * ((t - t0()) / tao_syn) * (np.exp(-(t - t0()) / tao_syn)))
+        I_syn = 1 * ((v_rev - v_m) * ((t - t0(args.spike_rate())) / tao_syn) * (np.exp(-(t - t0()) / tao_syn)))
         v_m = (v_m+dt) * LIF_neuron_model(v_m, t, I_syn)
