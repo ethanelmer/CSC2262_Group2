@@ -1,14 +1,60 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from neuralnetwork_functions import LIF_neuron_model
-import json
 
+import json
 with open('config.json', 'r') as f:
     config = json.load(f)
+v_r = config['v_r']
+v_thr = config['v_thr']
+v_spike = config['v_spike']
+v_rev = config['v_rev']
+tao_m = config['tao_m']
+tao_syn = config['tao_syn']
+c_m = config['c_m']
+g_bar = config['g_bar']
+t_r = config['t_r']
+w = config['w']
+dt = config['dt']
 
-# initialize other variables
-#t = 0
+
+def equation1(vm,ts, t):
+    reversal_potential = 0
+    decay_time_constant = 0.1
+    max_conductance = 1e-9
+    return max_conductance * (reversal_potential - vm) * np.exp(
+        -(t - ts) / decay_time_constant
+    )
+
+def equation2(mode, t, spike_rate=None, current=None):
+    steps = int(t/dt)
+    vm = np.zeros(steps)
+    time = np.linspace(0,t,steps)
+    for i in range (1,steps):
+        if(vm[i-1]>=v_thr):
+            vm[i]=v_r
+        else:
+            if mode == "current":
+                input_current = current
+            elif mode == "spike":
+                input_current = equation1(
+                    vm[i - 1], time[0], time[i], weight=1
+                )
+                input_current *= spike_rate / 1000  # Convert Hz to kHz
+            else:
+                raise ValueError("Invalid mode. Mode must be 'current' or 'spike'.")
+
+            vm[i] = (
+                vm[i - 1]
+                + (input_current / c_m) * dt
+                - (vm[i - 1] - v_r)
+                * dt
+                / t_r)
+        plt.plot(time, vm)
+        plt.xlabel("Time (s)")
+        plt.ylabel("Membrane Voltage (V)")
+        plt.title("Membrane Voltage vs Time")
+        plt.show()
 
 def main():
 
