@@ -23,7 +23,7 @@ def equation1(vm,ts, t):
     decay_time_constant = 0.1
     max_conductance = 1e-9
     return max_conductance * (reversal_potential - vm) * np.exp(
-        -(t - ts) / decay_time_constant
+        -(t - ts) / tao_m
     )
 
 def equation2(mode, t, spike_rate=None, current=None):
@@ -49,7 +49,7 @@ def equation2(mode, t, spike_rate=None, current=None):
                 + (input_current / c_m) * dt
                 - (vm[i - 1] - v_r)
                 * dt
-                / tao_m)
+                / t_r)
         plt.plot(time, vm)
         plt.xlabel("Time (s)")
         plt.ylabel("Membrane Voltage (V)")
