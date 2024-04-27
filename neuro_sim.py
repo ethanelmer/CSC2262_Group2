@@ -8,9 +8,9 @@ with open('config.json', 'r') as f:
     config = json.load(f)
 
 # initialize other variables
-t = 0
+#t = 0
 
-if __name__ == "__main__":
+def main():
 
     # Add argument
     parser = argparse.ArgumentParser(description='Simulate single LIF neuron alpha synapse using numerical methods.')
@@ -34,8 +34,9 @@ if __name__ == "__main__":
 
 
 
-    duration = 100
-
+    '''
+        duration = 100
+    
     #GET VM USING EULER'S METHOD
     while t < duration:
         t = t + dt  # Increase step size
@@ -43,3 +44,7 @@ if __name__ == "__main__":
         t0=0
         I_syn = 1 * ((v_rev - v_m) * ((t - t0(args.spike_rate())) / tao_syn) * (np.exp(-(t - t0()) / tao_syn)))
         v_m = (v_m+dt) * LIF_neuron_model(v_m, t, I_syn)
+    '''
+
+if __name__ == "__main__":
+    main()
