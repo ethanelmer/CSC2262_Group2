@@ -20,7 +20,6 @@ dt = config['dt'] #Step
 
 def equation1(vm,ts, t):
     reversal_potential = 0
-    decay_time_constant = 0.1
     max_conductance = 1e-9
     return max_conductance * (reversal_potential - vm) * np.exp(
         -(t - ts) / tao_m
