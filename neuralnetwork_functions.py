@@ -38,13 +38,23 @@ def isyn(v_m, t, t0):
 def dvm_dt(t, v_m, input_current, t_s):
     return synaptic_current_term(v_m, input_current) * S(t, t_s)
 
+# simulation start time
+start_time = 0  # seconds
+
+# simulation stop time
+stop_time = 100  # seconds
+
+# the presynaptic neuron's spike rate
+spike_rate = 50  # spikes/second
+
+# now generate the presynaptic spike train for the whole simulation
+presynaptic_spike_train = np.arange(start_time, stop_time, 1 / spike_rate)
 def LIF_model(mode, t, spike_rate=None, current=None):
     steps = int(t / dt)
     v_m = np.full(steps, v_r)  # Initialize with the resting potential
     time = np.linspace(0, t, steps)
     t_s = -np.inf
     input_current = 0  # Initialize to zero for safety
-    synaptic_current_array = np.zeros(steps)
 
     for i in range(1, steps):
         if v_m[i - 1] >= v_thr:
@@ -57,7 +67,9 @@ def LIF_model(mode, t, spike_rate=None, current=None):
             elif mode == "spike":
                 if time[i] - t_s > t_r:  # Check if out of refractory period
                     # Use the time since the last spike for the alpha function
-                    input_current = isyn(v_m[i - 1], time[i], t_s) * (spike_rate / 1000)  # Convert Hz to kHz
+                    t0_index = np.where((time[i] - presynaptic_spike_train) >= 0)[0][-1]
+                    t0 = presynaptic_spike_train[t0_index]
+                    input_current = isyn(v_m[i - 1], time[i], t0) * (spike_rate / 1000)  # Convert Hz to kHz
                 else:
                     input_current = 0
 
