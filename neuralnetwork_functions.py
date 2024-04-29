@@ -6,17 +6,17 @@ import json
 
 with open('config.json', 'r') as f:
     config = json.load(f)
-v_r = config['v_r'] #Resting potential
-v_thr = config['v_thr'] #Threshold
-v_spike = config['v_spike'] #Voltage of the spike, has no significant use
-v_rev = config['v_rev'] #Reversal potential
-tao_m = config['tao_m'] #Decay time constant of the neuron
-tao_syn = config['tao_syn'] #Decay time constant of the alpha synapse
-c_m = config['c_m'] #Membrane capacitance
-g_bar = config['g_bar'] #Maximum conductance (inverse of the resistance)
-t_r = config['t_r'] #Refractory period
-w = config['w'] #Weight
-dt = config['dt'] #Step
+v_r = config['v_r']
+v_thr = config['v_thr']
+v_spike = config['v_spike']
+v_rev = config['v_rev']
+tao_m = config['tao_m']
+tao_syn = config['tao_syn']
+c_m = config['c_m']
+g_bar = config['g_bar']
+t_r = config['t_r']
+w = config['w']
+dt = config['dt']
 
 def synaptic_current_term(v_m, input_current):
     return -(v_m - v_r) / tao_m + input_current / c_m
@@ -38,7 +38,6 @@ def isyn(v_m, t, t0):
 def dvm_dt(t, v_m, input_current, t_s):
     return synaptic_current_term(v_m, input_current) * S(t, t_s)
 
-
 def LIF_model(mode, t, spike_rate=None, current=None):
     steps = int(t / dt)
     v_m = np.full(steps, v_r)  # Initialize with the resting potential
@@ -46,10 +45,9 @@ def LIF_model(mode, t, spike_rate=None, current=None):
     t_s = -np.inf
     input_current = 0  # Initialize to zero for safety
 
-    presynaptic_spike_train = np.arange(0, t, 1 / spike_rate)
-
     for i in range(1, steps):
         if v_m[i - 1] >= v_thr:
+        if v_m[i - 1] >= v_thr and time[i] - t_s > t_r:
             v_m[i - 1] = v_spike  # Set to spike voltage for visualization
             v_m[i] = v_r  # Reset membrane potential immediately after spike
             t_s = time[i]  # Update the last spike time
@@ -59,12 +57,10 @@ def LIF_model(mode, t, spike_rate=None, current=None):
             elif mode == "spike":
                 if time[i] - t_s > t_r:  # Check if out of refractory period
                     # Use the time since the last spike for the alpha function
-                    t0_index = np.where((time[i] - presynaptic_spike_train) >= 0)[0][-1]
-                    t0 = presynaptic_spike_train[t0_index]
-                    input_current = isyn(v_m[i - 1], time[i], t0) * (spike_rate / 1000)  # Convert Hz to kHz
+                    input_current = isyn(v_m[i - 1], time[i], t_s)
+                    input_current *= spike_rate / 1000  # Convert Hz to kHz
                 else:
                     input_current = 0
-
             # Calculate dv_dt using Euler's method
             dv_dt = dvm_dt(time[i], v_m[i - 1], input_current, t_s)
             v_m[i] = v_m[i - 1] + dv_dt * dt  # Update membrane potential
