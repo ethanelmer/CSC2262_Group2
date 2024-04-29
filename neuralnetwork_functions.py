@@ -22,11 +22,12 @@ def synaptic_current_term(v_m, input_current):
     return -(v_m - v_r) / tao_m + input_current / c_m
 def S(t, t_s):
     return 0 if t - t_s - t_r <= 0 else 1  # Equation 2 piecewise
+# Function for alpha synapse
 def isyn(v_m, t, t0, local_w):
     synaptic_current = local_w * g_bar * (v_rev - v_m) * ((t - t0) / tao_syn) * np.exp(-(t - t0) / tao_syn)
     # isyn = g * ((v_r-v_m)*((t-t0)/tao_syn))**(-(t-t0)/tao_syn) #This should be right for equation 3, but there may be
     return synaptic_current  # a difference. Not sure how the exponent is supposed to work.
-
+#Function to define ODE (multiplies S() and synaptic_current_term() functions
 def dvm_dt(t, v_m, input_current, t_s):
     return synaptic_current_term(v_m, input_current) * S(t, t_s)
 
@@ -46,7 +47,9 @@ def LIF_model(mode, t, spike_rate=None, current=None):
                     v_m[i - 1], time[i], time[i-1], w
                 )
                 input_current *= spike_rate / 1000  # Convert Hz to kHz
+                # Use local variables to define dv_dt for each step to use in eulers
                 dv_dt = dvm_dt(time[i], v_m, input_current, time[i - 1])
+                # update v_m with euler method
                 v_m[i] = v_m[i - 1] + dv_dt * dt
             else:
                 raise ValueError("Invalid mode. Mode must be 'current' or 'spike'.")
