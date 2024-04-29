@@ -57,8 +57,7 @@ def LIF_model(mode, t, spike_rate=None, current=None):
             elif mode == "spike":
                 if time[i] - t_s > t_r:  # Check if out of refractory period
                     # Use the time since the last spike for the alpha function
-                    input_current = isyn(v_m[i - 1], time[i], t_s)
-                    input_current *= spike_rate / 1000  # Convert Hz to kHz
+                    input_current = isyn(v_m[i - 1], time[i], t_s) * (spike_rate / 1000)  # Convert Hz to kHz
                 else:
                     input_current = 0
 
