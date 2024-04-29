@@ -23,75 +23,82 @@ def synaptic_current_term(v_m, input_current):
 def S(t, t_s):
     return 0 if t - t_s - t_r <= 0 else 1  # Equation 2 piecewise
 # Function for alpha synapse
-def isyn(v_m, t, t0, local_w):
-    synaptic_current = local_w * g_bar * (v_rev - v_m) * ((t - t0) / tao_syn) * np.exp(-(t - t0) / tao_syn)
-    # isyn = g * ((v_r-v_m)*((t-t0)/tao_syn))**(-(t-t0)/tao_syn) #This should be right for equation 3, but there may be
-    return synaptic_current  # a difference. Not sure how the exponent is supposed to work.
+def isyn(v_m, t, t0):
+    # Ensure t0 is not negative infinity and t - t0 is positive
+    if t0 == -np.inf or t - t0 < 0:
+        return 0
+    # Calculate the synaptic current using the alpha function
+    time_since_spike = (t - t0)
+    if time_since_spike < 0:
+        return 0  # This ensures no synaptic input is calculated before the first spike
+    synaptic_current = w * g_bar * (v_rev - v_m) * (time_since_spike / tao_syn) * np.exp(-(time_since_spike) / tao_syn)
+    return synaptic_current
+
 #Function to define ODE (multiplies S() and synaptic_current_term() functions
 def dvm_dt(t, v_m, input_current, t_s):
     return synaptic_current_term(v_m, input_current) * S(t, t_s)
 
 def LIF_model(mode, t, spike_rate=None, current=None):
     steps = int(t / dt)
-    v_m = np.zeros(steps)
+    v_m = np.full(steps, v_r)  # Initialize with the resting potential
     time = np.linspace(0, t, steps)
-    local_w = w
+    t_s = -np.inf
+    input_current = 0  # Initialize to zero for safety
+
     for i in range(1, steps):
         if v_m[i - 1] >= v_thr:
-            v_m[i] = v_r
+            v_m[i - 1] = v_spike  # Set to spike voltage for visualization
+            v_m[i] = v_r  # Reset membrane potential immediately after spike
+            t_s = time[i]  # Update the last spike time
         else:
             if mode == "current":
-                input_current = current
+                input_current = current / 1000  # Convert nA to A
             elif mode == "spike":
-                input_current = isyn(
-                    v_m[i - 1], time[i], time[i-1], w
-                )
-                input_current *= spike_rate / 1000  # Convert Hz to kHz
-                # Use local variables to define dv_dt for each step to use in eulers
-                dv_dt = dvm_dt(time[i], v_m, input_current, time[i - 1])
-                # update v_m with euler method
-                v_m[i] = v_m[i - 1] + dv_dt * dt
-            else:
-                raise ValueError("Invalid mode. Mode must be 'current' or 'spike'.")
+                if time[i] - t_s > t_r:  # Check if out of refractory period
+                    # Use the time since the last spike for the alpha function
+                    input_current = isyn(v_m[i - 1], time[i], t_s)
+                    input_current *= spike_rate / 1000  # Convert Hz to kHz
+                else:
+                    input_current = 0
+            # Calculate dv_dt using Euler's method
+            dv_dt = dvm_dt(time[i], v_m[i - 1], input_current, t_s)
+            v_m[i] = v_m[i - 1] + dv_dt * dt  # Update membrane potential
 
-    plt.plot(time, v_m)
-    plt.xlabel("Time (s)")
+    # Convert the time from seconds to milliseconds for plotting
+    time_ms = time * 1000
+    plt.plot(time_ms, v_m, label='Membrane Potential')
+    plt.xlabel("Time (ms)")
     plt.ylabel("Membrane Voltage (V)")
     plt.title("Membrane Voltage vs Time")
+    plt.legend()
     plt.show()
 
+
+
 def main():
-    # Add argument
     parser = argparse.ArgumentParser(description='Simulate single LIF neuron alpha synapse using numerical methods.')
 
-    # '-m' mode of the experiment (current or spike)
-    parser.add_argument("m", choices=["current", "spike"], help="Simulation mode: 'current' or 'spike'")
+    # Positional arguments for mode and simulation time
+    parser.add_argument("mode", choices=["current", "spike"], help="Simulation mode: 'current' or 'spike'")
+    parser.add_argument("sim_time", type=float, help="Simulation time in milliseconds.")
 
-    # '-s' runtime of simulation (milliseconds)
-    parser.add_argument("s", type=float, help="Simulation time in milliseconds.")
-
-    # '--spike_rate' and '--current'
+    # Optional arguments
     parser.add_argument("--spike_rate", type=int, help="Spike rate in Hz (required for 'spike' mode).")
     parser.add_argument("--current", type=float, help="Input current in nanoamps (required for 'current' mode).")
+
     args = parser.parse_args()
 
-    # Error check
-    if args.m == 'spike' and not args.spike_rate:
+    # Convert simulation time from milliseconds to seconds
+    sim_time_seconds = args.sim_time / 1000
+
+    # Error checks
+    if args.mode == 'spike' and args.spike_rate is None:
         parser.error('--spike_rate is required when mode is "spike"')
-    elif args.m == 'current' and not args.current:
+    elif args.mode == 'current' and args.current is None:
         parser.error('--current is required when mode is "current"')
 
-    LIF_model(args.m, args.s, args.spike_rate, args.current)
-
-    # GET VM USING EULER'S METHOD
-    '''
-    while t < duration:
-        t = t + dt  # Increase step size
-        v_m=0
-        t0=0
-        I_syn = 1 * ((v_rev - v_m) * ((t - t0(args.spike_rate())) / tao_syn) * (np.exp(-(t - t0()) / tao_syn)))
-        v_m = (v_m+dt) * LIF_model(v_m, t, I_syn)
-    '''
+    # Run the model
+    LIF_model(args.mode, sim_time_seconds, args.spike_rate, args.current)
 
 
 if __name__ == "__main__":
