@@ -39,7 +39,7 @@ def dvm_dt(t, v_m, input_current, t_s):
     return synaptic_current_term(v_m, input_current) * S(t, t_s)
 
 
-def LIF_model(mode, t, spike_rate=None, current=None):
+def LIF_model(mode, t, spike_rate, current=None):
     steps = int(t / dt)
     v_m = np.full(steps, v_r)  # Initialize with the resting potential
     time = np.linspace(0, t, steps)
@@ -53,6 +53,7 @@ def LIF_model(mode, t, spike_rate=None, current=None):
             v_m[i - 1] = v_spike  # Set to spike voltage for visualization
             v_m[i] = v_r  # Reset membrane potential immediately after spike
             t_s = time[i]  # Update the last spike time
+            spike_rate = spike_rate
         else:
             if mode == "current":
                 input_current = current / 1000  # Convert nA to A
