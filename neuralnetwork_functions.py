@@ -19,7 +19,7 @@ w = config['w']
 dt = config['dt']
 
 def synaptic_current_term(v_m, input_current):
-    return -(v_m - v_r) / tau_m + input_current / c_m
+    return -(v_m - v_r) / tao_m + input_current / c_m
 def S(t, t_s):
     return 0 if t - t_s - t_r <= 0 else 1  # Equation 2 piecewise
 def isyn(v_m, t, t0, local_w):
@@ -43,7 +43,7 @@ def LIF_model(mode, t, spike_rate=None, current=None):
                 input_current = current
             elif mode == "spike":
                 input_current = isyn(
-                    v_m[i - 1], time[i], time[i-1], 1
+                    v_m[i - 1], time[i], time[i-1], w
                 )
                 input_current *= spike_rate / 1000  # Convert Hz to kHz
                 dv_dt = dvm_dt(time[i], v_m, input_current, time[i - 1])
