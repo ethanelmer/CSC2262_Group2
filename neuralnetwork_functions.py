@@ -46,7 +46,6 @@ def LIF_model(mode, t, spike_rate=None, current=None):
     input_current = 0  # Initialize to zero for safety
 
     for i in range(1, steps):
-        if v_m[i - 1] >= v_thr:
         if v_m[i - 1] >= v_thr and time[i] - t_s > t_r:
             v_m[i - 1] = v_spike  # Set to spike voltage for visualization
             v_m[i] = v_r  # Reset membrane potential immediately after spike
