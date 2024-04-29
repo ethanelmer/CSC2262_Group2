@@ -38,41 +38,52 @@ def isyn(v_m, t, t0):
 def dvm_dt(t, v_m, input_current, t_s):
     return synaptic_current_term(v_m, input_current) * S(t, t_s)
 
+
 def LIF_model(mode, t, spike_rate=None, current=None):
     steps = int(t / dt)
     v_m = np.full(steps, v_r)  # Initialize with the resting potential
     time = np.linspace(0, t, steps)
-    t_s = -np.inf
-    input_current = 0  # Initialize to zero for safety
+
+    # Generate presynaptic spike train
+    presynaptic_spike_train = np.arange(0, t, dt)
+
+    # Variables for tracking spikes and input currents
+    last_spike_time = -np.inf  # Time of the last neuron's spike
+    last_input_spike_time = 0  # Time of the last input spike from presynaptic neuron
 
     for i in range(1, steps):
-        if v_m[i - 1] >= v_thr and time[i] - t_s > t_r:
-            v_m[i - 1] = v_spike  # Set to spike voltage for visualization
-            v_m[i] = v_r  # Reset membrane potential immediately after spike
-            t_s = time[i]  # Update the last spike time
-        else:
-            if mode == "current":
-                input_current = current / 1000  # Convert nA to A
-            elif mode == "spike":
-                if time[i] - t_s > t_r:  # Check if out of refractory period
-                    # Use the time since the last spike for the alpha function
-                    input_current = isyn(v_m[i - 1], time[i], t_s)
-                    input_current *= spike_rate / 1000  # Convert Hz to kHz
-                else:
-                    input_current = 0
-            # Calculate dv_dt using Euler's method
-            dv_dt = dvm_dt(time[i], v_m[i - 1], input_current, t_s)
-            v_m[i] = v_m[i - 1] + dv_dt * dt  # Update membrane potential
+        # Get the last input spike time
+        if mode == "spike" and time[i] >= last_input_spike_time + 1 / spike_rate:
+            last_input_spike_time = presynaptic_spike_train[presynaptic_spike_train <= time[i]].max()
 
-    # Convert the time from seconds to milliseconds for plotting
-    time_ms = time * 1000
+        # Calculate the synaptic current based on the most recent input spike
+        if mode == "spike":
+            input_current = isyn(v_m[i - 1], time[i], last_input_spike_time)
+
+        # For "current" mode, just set the input current to the constant value
+        elif mode == "current" and current is not None:
+            input_current = current / 1e9  # Convert nA to A
+
+        # Calculate dv/dt using Euler's method
+        if time[i] - last_spike_time >= t_r:
+            dv_dt = dvm_dt(time[i], v_m[i - 1], input_current, last_spike_time)
+            v_m[i] = v_m[i - 1] + dv_dt * dt
+
+        # Check if the neuron fires
+        if v_m[i] >= v_thr:
+            v_m[i] = v_spike  # Visualize spike
+            last_spike_time = time[i]  # Update the time of the last spike
+            if i < steps - 1:
+                v_m[i + 1] = v_r  # Reset to resting potential after the spike
+
+    # Plot the results
+    time_ms = time * 1000  # Convert time to milliseconds for plotting
     plt.plot(time_ms, v_m, label='Membrane Potential')
     plt.xlabel("Time (ms)")
     plt.ylabel("Membrane Voltage (V)")
     plt.title("Membrane Voltage vs Time")
     plt.legend()
     plt.show()
-
 
 
 def main():
