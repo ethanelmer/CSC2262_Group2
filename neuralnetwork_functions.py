@@ -26,12 +26,9 @@ def isyn(v_m, t, t0, local_w):
     synaptic_current = local_w * g_bar * (v_rev - v_m) * ((t - t0) / tao_syn) * np.exp(-(t - t0) / tao_syn)
     # isyn = g * ((v_r-v_m)*((t-t0)/tao_syn))**(-(t-t0)/tao_syn) #This should be right for equation 3, but there may be
     return synaptic_current  # a difference. Not sure how the exponent is supposed to work.
-def dvm_dt(t, v_m, v_r, tau_m, input_current, c_m, t_s, t_r):
+
+def dvm_dt(t, v_m, input_current, t_s):
     return synaptic_current_term(v_m, input_current) * S(t, t_s)
-def euler_vm(v_m, input_current, c_m, t_r, dt, t, v_r, tau_m):
-    dv_dt = dvm_dt(t, v_m, v_r, tau_m, input_current, c_m, t_s, t_r)
-    v_m_next = v_m + dvm_dt * dt
-    return v_m_next
 
 def LIF_model(mode, t, spike_rate=None, current=None):
     steps = int(t / dt)
@@ -46,10 +43,11 @@ def LIF_model(mode, t, spike_rate=None, current=None):
                 input_current = current
             elif mode == "spike":
                 input_current = isyn(
-                    v_m[i - 1], time[i], time[0], 1
+                    v_m[i - 1], time[i], time[i-1], 1
                 )
                 input_current *= spike_rate / 1000  # Convert Hz to kHz
-                v_m[i] = euler_vm(v_m[i - 1], input_current, c_m, t_r, dt, time[i], v_r, tao_m)
+                dv_dt = dvm_dt(time[i], v_m, input_current, time[i - 1])
+                v_m[i] = v_m[i - 1] + dv_dt * dt
             else:
                 raise ValueError("Invalid mode. Mode must be 'current' or 'spike'.")
 
