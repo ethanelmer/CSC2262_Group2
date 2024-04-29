@@ -44,32 +44,39 @@ def LIF_model(mode, t, spike_rate=None, current=None):
     time = np.linspace(0, t, steps)
     t_s = -np.inf
     input_current = 0  # Initialize to zero for safety
+    synaptic_current_array = np.zeros(steps)
 
     for i in range(1, steps):
         if v_m[i - 1] >= v_thr:
             v_m[i - 1] = v_spike  # Set to spike voltage for visualization
             v_m[i] = v_r  # Reset membrane potential immediately after spike
             t_s = time[i]  # Update the last spike time
-        else:
-            if mode == "current":
-                input_current = current / 1000  # Convert nA to A
-            elif mode == "spike":
-                if time[i] - t_s > t_r:  # Check if out of refractory period
-                    # Use the time since the last spike for the alpha function
-                    input_current = isyn(v_m[i - 1], time[i], t_s)
-                    input_current *= spike_rate / 1000  # Convert Hz to kHz
-                else:
-                    input_current = 0
 
-            # Calculate dv_dt using Euler's method
-            dv_dt = dvm_dt(time[i], v_m[i - 1], input_current, t_s)
-            v_m[i] = v_m[i - 1] + dv_dt * dt  # Update membrane potential
+        # Calculate input current including synaptic current
+        if mode == "current":
+            input_current = current / 1000  # Convert nA to A
+        elif mode == "spike":
+            # Calculate synaptic current using the alpha function
+            synaptic_current = isyn(v_m[i - 1], time[i], t_s)
+            synaptic_current *= spike_rate / 1000  # Convert Hz to kHz
+            # Accumulate synaptic current over time
+            synaptic_current_array[i] = synaptic_current + synaptic_current_array[i - 1]
 
-    # Convert the time from seconds to milliseconds for plotting
+        # Calculate dv_dt using Euler's method
+        dv_dt = dvm_dt(time[i], v_m[i - 1], synaptic_current_array[i], t_s)
+        v_m[i] = v_m[i - 1] + dv_dt * dt  # Update membrane potential
+
+        # Convert the time from seconds to milliseconds for plotting
     time_ms = time * 1000
+
+    # Plot the membrane potential and synaptic current
     plt.plot(time_ms, v_m, label='Membrane Potential')
+    if mode == "spike":
+        plt.plot(time_ms, synaptic_current_array, label='Synaptic Current')
     plt.xlabel("Time (ms)")
     plt.ylabel("Membrane Voltage (V)")
+    if mode == "spike":
+        plt.ylabel("Membrane Voltage (V) / Synaptic Current (A)")
     plt.title("Membrane Voltage vs Time")
     plt.legend()
     plt.show()
