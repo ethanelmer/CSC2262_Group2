@@ -45,8 +45,9 @@ def LIF_model(mode, t, spike_rate=None, current=None):
     t_s = -np.inf
     input_current = 0  # Initialize to zero for safety
 
+    synaptic_current_array = np.zeros(steps)
     for i in range(1, steps):
-        if v_m[i - 1] >= v_thr and time[i] - t_s > t_r:
+        if v_m[i - 1] >= v_thr:
             v_m[i - 1] = v_spike  # Set to spike voltage for visualization
             v_m[i] = v_r  # Reset membrane potential immediately after spike
             t_s = time[i]  # Update the last spike time
@@ -60,8 +61,9 @@ def LIF_model(mode, t, spike_rate=None, current=None):
                     input_current *= spike_rate / 1000  # Convert Hz to kHz
                 else:
                     input_current = 0
+            synaptic_current_array[i]=input_current
             # Calculate dv_dt using Euler's method
-            dv_dt = dvm_dt(time[i], v_m[i - 1], input_current, t_s)
+            dv_dt = dvm_dt(time[i], v_m[i - 1], synaptic_current_array[i], t_s)
             v_m[i] = v_m[i - 1] + dv_dt * dt  # Update membrane potential
 
     # Convert the time from seconds to milliseconds for plotting
