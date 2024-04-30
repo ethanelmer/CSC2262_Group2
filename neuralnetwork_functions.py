@@ -45,7 +45,7 @@ def LIF_model(mode, t, spike_rate=None, current=None):
     time = np.linspace(0, t, steps)
 
     # Generate presynaptic spike train
-    presynaptic_spike_train = np.arange(0, t, dt)
+    presynaptic_spike_train = np.arange(0, t, steps)
 
     # Variables for tracking spikes and input currents
     last_spike_time = -np.inf  # Time of the last neuron's spike
